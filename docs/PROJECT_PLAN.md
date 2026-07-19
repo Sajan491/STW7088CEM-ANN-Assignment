@@ -9,7 +9,7 @@ Two neural-network tasks on the UAVVaste aerial litter dataset
 ## Phases
 
 ### Phase 1 — Data pipeline (`feature/data-pipeline`)
-- Download script for UAVVaste (images + COCO annotations)
+- Manual dataset placement under `data/` (direct links documented in README)
 - COCO annotation parsing utilities
 - Exploratory data analysis: object-size distribution, annotations per image,
   class-balance statistics → figures/tables saved to `results/`

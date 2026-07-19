@@ -27,7 +27,24 @@ neural-network tasks on the [UAVVaste dataset](https://github.com/PUTvision/UAVV
 
 [UAVVaste](https://github.com/PUTvision/UAVVaste) — 772 drone images, 3,716
 hand-labelled litter annotations (COCO format, single `rubbish` class).
-The dataset is downloaded by script and is **not** committed to this repository.
+
+Download manually and place under `data/` (the folder is gitignored — the
+dataset is **never** committed):
+
+- Annotations: [annotations.json](https://raw.githubusercontent.com/PUTvision/UAVVaste/main/annotations/annotations.json)
+  → save to `data/annotations/annotations.json`
+- Images: [UAVVasteDataset.zip from Zenodo](https://zenodo.org/records/8214061)
+  (~2.9 GB) → extract all images (flat) into `data/images/`
+
+```
+data/
+├── annotations/
+│   └── annotations.json
+└── images/
+    ├── BATCH_d07_img_580.jpg
+    ├── batch_01_frame_0.jpg
+    └── ... (772 .jpg files)
+```
 
 ## Repository structure
 
@@ -59,8 +76,33 @@ CPU works for the smoke-test modes.
 
 ## Usage
 
-Each phase adds runnable scripts; usage instructions are added to this section
-as the corresponding phase lands.
+### Phase 1 — Data pipeline
+
+All scripts read `configs/data.yaml` (tile size, split ratios, thresholds, seed)
+and support a smoke-test mode for quick verification.
+
+First place the dataset under `data/` as described in the Dataset section
+(the EDA and split steps only need `annotations.json`; tile-crop writing and
+detector training also need the images).
+
+```bash
+# 1. Leakage-free image-level splits (70/15/15, seeded)
+python -m src.data.splits
+
+# 2. Exploratory data analysis -> results/figures/ + results/tables/
+python -m src.data.eda
+
+# 3. Tile generation with overlap-based litter/no-litter labels
+python -m src.data.tiles --dry-run               # labels + stats only (no images needed)
+python -m src.data.tiles                         # write tile crops (requires images)
+python -m src.data.tiles --limit 10              # smoke test on 10 images
+
+# Unit tests (tile labelling correctness, split leakage)
+python -m pytest tests/ -v
+```
+
+Notebook version: [notebooks/01_eda.ipynb](notebooks/01_eda.ipynb) runs the whole
+phase top-to-bottom and displays the generated figures and tables.
 
 ## Reproducibility
 

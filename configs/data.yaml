@@ -1,0 +1,33 @@
+# Dataset, split and tiling configuration for the UAVVaste pipeline.
+seed: 42
+
+dataset:
+  name: UAVVaste
+  # Official sources — download manually and place under data/ (see README):
+  #   annotations: https://raw.githubusercontent.com/PUTvision/UAVVaste/main/annotations/annotations.json
+  #   images:      https://zenodo.org/records/8214061 (UAVVasteDataset.zip)
+  root: data
+  images_dir: data/images
+  annotations_file: data/annotations/annotations.json
+
+splits:
+  ratios:
+    train: 0.70
+    val: 0.15
+    test: 0.15
+  file: data/processed/splits.json
+
+tiles:
+  size: 512          # square tile edge in pixels
+  stride: 512        # step between tile origins (== size -> non-overlapping grid)
+  # A tile is labelled positive (litter) when, for any annotation bbox:
+  #   intersection_area / bbox_area >= min_overlap_frac
+  #   OR intersection_area >= min_overlap_px (absolute area in px^2)
+  min_overlap_frac: 0.25
+  min_overlap_px: 1024
+  out_dir: data/processed/tiles
+  index_file: data/processed/tiles/tile_index.json
+
+eda:
+  figures_dir: results/figures
+  tables_dir: results/tables

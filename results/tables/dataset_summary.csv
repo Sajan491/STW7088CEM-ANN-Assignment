@@ -1,0 +1,12 @@
+,value
+images,772
+annotations,3718
+categories,['rubbish']
+anns_per_image_mean,4.816062176165803
+anns_per_image_median,4.0
+anns_per_image_max,65
+images_without_annotations,0
+bbox_area_frac_mean,0.0013053120672298184
+bbox_area_frac_median,0.0007166536269589705
+bbox_under_1pct_of_image,0.9916621839698763
+unique_resolutions,7

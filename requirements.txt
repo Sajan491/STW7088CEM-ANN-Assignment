@@ -16,7 +16,6 @@ Pillow>=10.0
 # Config & utilities
 PyYAML>=6.0
 tqdm>=4.66
-requests>=2.31
 
 # Metrics & plotting
 scikit-learn>=1.4

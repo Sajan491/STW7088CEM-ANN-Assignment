@@ -218,8 +218,8 @@ __marimo__/
 .streamlit/secrets.toml
 
 # ---- Project-specific ----
-# Dataset (downloaded by script, never committed)
-data/
+# Dataset (kept locally under ./data, never committed)
+/data/
 
 # Training outputs
 runs/
