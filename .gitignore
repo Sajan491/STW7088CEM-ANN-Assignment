@@ -216,3 +216,19 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# ---- Project-specific ----
+# Dataset (downloaded by script, never committed)
+data/
+
+# Training outputs
+runs/
+checkpoints/
+*.pt
+*.pth
+*.onnx
+
+# Large generated artefacts
+*.zip
+*.tar.gz
+
