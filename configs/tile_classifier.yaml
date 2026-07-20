@@ -1,0 +1,42 @@
+# Task 1 — tile-based litter classification (custom CNN from scratch).
+seed: 42
+
+data:
+  tiles_dir: data/processed/tiles
+  input_size: 224        # tiles are 512px; resized down for training speed
+  # train-time augmentation (aerial imagery has no canonical orientation)
+  augment:
+    hflip: true
+    vflip: true
+    color_jitter: 0.1    # brightness/contrast jitter strength (0 disables)
+  num_workers: 2
+
+model:
+  name: tile_cnn         # registered in src/models/factory.py
+  conv_channels: [32, 64, 128, 256, 256]   # one conv-pool block per entry
+  dense_units: 128
+  dropout: 0.3
+
+training:
+  batch_size: 64
+  epochs: 40
+  lr: 0.001
+  weight_decay: 0.0001
+  # class imbalance handling: weighted_loss (BCE pos_weight) | balanced_sampler
+  imbalance: weighted_loss
+  scheduler:             # ReduceLROnPlateau on the monitored metric
+    factor: 0.5
+    patience: 3
+    min_lr: 0.00001
+  early_stopping:
+    monitor: val_f1      # val_f1 | val_loss
+    patience: 7
+  checkpoint_dir: checkpoints
+  checkpoint_name: tile_cnn_best.pt
+  history_file: results/tables/tile_training_history.csv
+
+evaluation:
+  split: test
+  threshold: 0.5
+  figures_dir: results/figures
+  tables_dir: results/tables

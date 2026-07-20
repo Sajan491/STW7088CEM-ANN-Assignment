@@ -104,6 +104,27 @@ python -m pytest tests/ -v
 Notebook version: [notebooks/01_eda.ipynb](notebooks/01_eda.ipynb) runs the whole
 phase top-to-bottom and displays the generated figures and tables.
 
+### Phase 2 — Tile classifier (Task 1)
+
+A custom CNN (stacked conv–pool blocks + dense head, defined in
+`src/models/tile_cnn.py`) is trained from scratch on the labelled tiles.
+All hyperparameters live in `configs/tile_classifier.yaml`. Class imbalance is
+handled with a weighted BCE loss (or a balanced sampler — config switch);
+training uses ReduceLROnPlateau and early stopping on validation F1.
+
+```bash
+# Train (GPU recommended; checkpoints/ and history CSV are written)
+python -m src.training.train_tile_classifier
+python -m src.training.train_tile_classifier --limit 400 --epochs 2   # smoke test
+
+# Evaluate the best checkpoint on the held-out test split
+# -> metrics table, confusion matrix + learning-curve figures
+python -m src.evaluation.evaluate_tile_classifier
+```
+
+Notebook version: [notebooks/02_tile_classifier.ipynb](notebooks/02_tile_classifier.ipynb)
+(tile generation, sample-tile grid, training, evaluation, results).
+
 ## Reproducibility
 
 All scripts are config-driven (see `configs/`), set global seeds, and support a
