@@ -1,0 +1,36 @@
+# Task 2 (baseline) — YOLO litter detection at standard settings.
+seed: 42
+
+data:
+  annotations_file: data/annotations/annotations.json
+  images_dir: data/images
+  splits_file: data/processed/splits.json
+  yolo_dir: data/yolo            # generated YOLO-format dataset
+  data_yaml: data/yolo/data.yaml # Ultralytics dataset descriptor
+  class_name: rubbish
+
+model:
+  # Pretrained single-stage detector fine-tuned on UAVVaste.
+  weights: yolov8s.pt            # yolov8s.pt | yolo11s.pt
+
+train:
+  imgsz: 640                     # standard input resolution (baseline)
+  epochs: 100
+  batch: 16
+  patience: 20                   # Ultralytics early stopping
+  optimizer: auto
+  lr0: 0.01
+  seed: 42
+  project: runs/detect
+  name: yolo_baseline
+  # Baseline uses Ultralytics' standard augmentation defaults. The optimised
+  # configuration (Phase 4) overrides these via an `augment:` block.
+  augment: {}
+
+eval:
+  split: test
+  figures_dir: results/figures
+  tables_dir: results/tables
+  checkpoint_dir: checkpoints
+  checkpoint_name: yolo_baseline.pt
+  metrics_file: results/tables/yolo_baseline_metrics.csv

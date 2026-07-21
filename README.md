@@ -125,6 +125,29 @@ python -m src.evaluation.evaluate_tile_classifier
 Notebook version: [notebooks/02_tile_classifier.ipynb](notebooks/02_tile_classifier.ipynb)
 (tile generation, sample-tile grid, training, evaluation, results).
 
+### Phase 3 — YOLO detection baseline (Task 2)
+
+A pretrained Ultralytics YOLO detector is fine-tuned on UAVVaste (single class
+`rubbish`) at standard 640 px settings, establishing the baseline the optimised
+configuration (Phase 4) is measured against. Config: `configs/yolo_baseline.yaml`.
+The COCO→YOLO converter reuses the Phase 1 image-level splits and writes the 29
+EXIF-rotated images in raw-pixel space so labels and pixels stay aligned
+(Ultralytics auto-applies EXIF orientation otherwise).
+
+```bash
+# 1. Convert COCO -> YOLO format (images/ + labels/ + data.yaml)
+python -m src.data.coco_to_yolo
+python -m src.data.coco_to_yolo --limit 20     # smoke test
+
+# 2. Fine-tune the baseline detector (GPU; needs `pip install ultralytics`)
+python -m src.training.train_yolo
+
+# 3. Evaluate on the held-out test split -> results/tables/yolo_baseline_metrics.csv
+python -m src.evaluation.evaluate_yolo
+```
+
+Notebook version: [notebooks/03_yolo_baseline.ipynb](notebooks/03_yolo_baseline.ipynb).
+
 ## Reproducibility
 
 All scripts are config-driven (see `configs/`), set global seeds, and support a

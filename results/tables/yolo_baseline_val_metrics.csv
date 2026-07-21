@@ -1,0 +1,2 @@
+model,imgsz,epochs_run,split,mAP50,mAP50_95,precision,recall
+yolov8s.pt,640,100,val,0.7867,0.4656,0.8476,0.7458
