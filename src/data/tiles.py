@@ -125,13 +125,21 @@ def write_tile_crops(index: list[dict], images_dir: Path, out_dir: Path) -> int:
     from tqdm import tqdm
 
     for name, tiles in tqdm(by_image.items(), desc="writing tile crops"):
-        img = cv2.imread(str(images_dir / name))
+        # IMREAD_IGNORE_ORIENTATION: COCO annotations (and image sizes) are in
+        # RAW pixel space; some UAVVaste images carry EXIF rotation tags that
+        # cv2 would otherwise apply, swapping width/height vs the annotations.
+        img = cv2.imread(
+            str(images_dir / name), cv2.IMREAD_COLOR | cv2.IMREAD_IGNORE_ORIENTATION
+        )
         if img is None:
             print(f"[warn] missing image {name}; skipped {len(tiles)} tiles")
             continue
         stem = Path(name).stem
         for t in tiles:
             crop = img[t["y"] : t["y"] + t["size"], t["x"] : t["x"] + t["size"]]
+            if crop.shape[0] != t["size"] or crop.shape[1] != t["size"]:
+                print(f"[warn] {name}: tile ({t['x']},{t['y']}) out of bounds; skipped")
+                continue
             cls = "pos" if t["label"] else "neg"
             dest = out_dir / t["split"] / cls / f"{stem}_{t['x']}_{t['y']}.jpg"
             dest.parent.mkdir(parents=True, exist_ok=True)
