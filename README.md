@@ -148,6 +148,31 @@ python -m src.evaluation.evaluate_yolo
 
 Notebook version: [notebooks/03_yolo_baseline.ipynb](notebooks/03_yolo_baseline.ipynb).
 
+### Phase 4 — YOLO optimisation & ablation (Task 2)
+
+Three modifications are added cumulatively to the baseline and each one's
+contribution is quantified: **+resolution** (1024 px), **+augmentation**
+(domain-motivated: vertical flips + rotation for nadir aerial, scale jitter,
+copy-paste, brightness), and **+SAHI** (sliced inference). Configs:
+`configs/yolo_res1024.yaml`, `configs/yolo_optimized.yaml`.
+
+```bash
+# Train the two 1024 px arms (GPU; needs ultralytics, sahi, pycocotools)
+python -m src.training.train_yolo --config configs/yolo_res1024.yaml
+python -m src.training.train_yolo --config configs/yolo_optimized.yaml
+
+# Evaluate each arm on the test split
+python -m src.evaluation.evaluate_yolo --config configs/yolo_res1024.yaml --tag "+resolution"
+python -m src.evaluation.evaluate_yolo --config configs/yolo_optimized.yaml --tag "+augmentation"
+python -m src.evaluation.sahi_eval    --config configs/yolo_optimized.yaml            # sliced
+python -m src.evaluation.sahi_eval    --config configs/yolo_optimized.yaml --no-slice # control
+
+# Consolidate baseline + arms -> results/tables/yolo_ablation.csv + figure
+python -m src.evaluation.ablation
+```
+
+Notebook version: [notebooks/04_yolo_optimized.ipynb](notebooks/04_yolo_optimized.ipynb).
+
 ## Reproducibility
 
 All scripts are config-driven (see `configs/`), set global seeds, and support a

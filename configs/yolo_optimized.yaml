@@ -1,0 +1,57 @@
+# Task 2 (ablation arm: +augmentation, and base model for +SAHI).
+# 1024 px input PLUS domain-motivated augmentation. Aerial nadir imagery has no
+# canonical orientation, so vertical flips and rotation are label-preserving;
+# copy-paste raises small-object density; brightness/HSV covers lighting change.
+seed: 42
+
+data:
+  annotations_file: data/annotations/annotations.json
+  images_dir: data/images
+  splits_file: data/processed/splits.json
+  yolo_dir: data/yolo
+  data_yaml: data/yolo/data.yaml
+  class_name: rubbish
+
+model:
+  weights: yolov8s.pt
+
+train:
+  imgsz: 1024
+  epochs: 80
+  batch: 8
+  patience: 15
+  optimizer: auto
+  lr0: 0.01
+  seed: 42
+  project: runs/detect
+  name: yolo_optimized
+  augment:                       # enhanced augmentation (vs Ultralytics defaults)
+    flipud: 0.5                  # vertical flips — valid for nadir aerial views
+    fliplr: 0.5
+    degrees: 10.0               # rotation — valid for aerial (arbitrary yaw)
+    translate: 0.1
+    scale: 0.7                  # stronger scale jitter (altitude invariance)
+    mosaic: 1.0
+    close_mosaic: 10            # disable mosaic for the last 10 epochs
+    mixup: 0.1
+    copy_paste: 0.1            # paste litter instances -> denser small objects
+    hsv_h: 0.015
+    hsv_s: 0.7
+    hsv_v: 0.5                 # brightness variation
+
+eval:
+  split: test
+  figures_dir: results/figures
+  tables_dir: results/tables
+  checkpoint_dir: checkpoints
+  checkpoint_name: yolo_optimized.pt
+  metrics_file: results/tables/yolo_optimized_metrics.csv
+
+# SAHI sliced-inference settings (used by src.evaluation.sahi_eval).
+sahi:
+  slice_height: 512
+  slice_width: 512
+  overlap_height_ratio: 0.2
+  overlap_width_ratio: 0.2
+  confidence_threshold: 0.25
+  metrics_file: results/tables/yolo_sahi_metrics.csv

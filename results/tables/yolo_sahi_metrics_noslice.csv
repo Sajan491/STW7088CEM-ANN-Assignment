@@ -1,0 +1,2 @@
+config,model,imgsz,split,sahi,mAP50,mAP50_95,precision,recall
++augmentation (coco-eval),yolov8s.pt,1024,test,False,0.8205,0.4365,0.6931,0.869
