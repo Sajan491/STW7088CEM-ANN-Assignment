@@ -1,0 +1,6 @@
+arm,eval,imgsz,mAP50,mAP50_95,precision,recall,d_mAP50,d_mAP50_95,d_precision,d_recall
+baseline (640),ultralytics,640,0.7931,0.4465,0.8123,0.7536,0.0,0.0,0.0,0.0
++resolution (1024),ultralytics,1024,0.8575,0.5038,0.8566,0.801,0.0644,0.0573,0.0443,0.0474
++augmentation (1024),ultralytics,1024,0.8633,0.5046,0.8789,0.7794,0.0702,0.0581,0.0666,0.0258
+"+aug, full-image (COCO)",pycocotools,1024,0.8205,0.4365,0.6931,0.869,0.0274,-0.01,-0.1192,0.1154
+"+SAHI, sliced (COCO)",pycocotools,1024,0.6229,0.3218,0.1164,0.8574,-0.1702,-0.1247,-0.6959,0.1038

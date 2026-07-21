@@ -1,0 +1,2 @@
+config,model,imgsz,split,sahi,mAP50,mAP50_95,precision,recall
++SAHI,yolov8s.pt,1024,test,True,0.6229,0.3218,0.1164,0.8574

@@ -1,0 +1,2 @@
+config,model,imgsz,split,mAP50,mAP50_95,precision,recall
++resolution,yolov8s.pt,1024,test,0.8575,0.5038,0.8566,0.801
