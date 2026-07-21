@@ -173,6 +173,23 @@ python -m src.evaluation.ablation
 
 Notebook version: [notebooks/04_yolo_optimized.ipynb](notebooks/04_yolo_optimized.ipynb).
 
+### Phase 5 — Evaluation & cross-task demonstration
+
+Consolidates both tasks' results and produces a qualitative demonstration on
+unseen (held-out test) images: ground truth, YOLO detections, and the
+tile-classifier litter heatmap side by side — the two-stage pipeline in action.
+
+```bash
+# Cross-task summary table + figure
+python -m src.evaluation.consolidate
+
+# Qualitative demo (needs both checkpoints): 3-panel figures on unseen images
+python -m src.evaluation.qualitative_demo --num-images 4
+python -m src.evaluation.qualitative_demo --images BATCH_d06_img_1440.jpg   # specific image
+```
+
+Notebook version: [notebooks/05_results_analysis.ipynb](notebooks/05_results_analysis.ipynb).
+
 ## Reproducibility
 
 All scripts are config-driven (see `configs/`), set global seeds, and support a

@@ -1,0 +1,14 @@
+task,config,metric,value
+Task 1 — tile CNN,custom CNN,accuracy,0.9053
+Task 1 — tile CNN,custom CNN,precision,0.6701
+Task 1 — tile CNN,custom CNN,recall,0.8408
+Task 1 — tile CNN,custom CNN,f1,0.7458
+Task 1 — tile CNN,custom CNN,roc_auc,0.9508
+Task 2 — YOLO,baseline (640),mAP50,0.7931
+Task 2 — YOLO,baseline (640),mAP50_95,0.4465
+Task 2 — YOLO,baseline (640),precision,0.8123
+Task 2 — YOLO,baseline (640),recall,0.7536
+Task 2 — YOLO,optimised (1024),mAP50,0.8633
+Task 2 — YOLO,optimised (1024),mAP50_95,0.5046
+Task 2 — YOLO,optimised (1024),precision,0.8789
+Task 2 — YOLO,optimised (1024),recall,0.7794
