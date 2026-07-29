@@ -30,51 +30,62 @@ from src.utils.config import load_config, resolve_path
 from src.utils.seed import set_seed
 
 
+def _callout(ax, x, y, text, color=plotting.INK):
+    """A soft rounded annotation box."""
+    ax.text(x, y, text, transform=ax.transAxes, ha="left", va="top",
+            fontsize=9.5, color=color,
+            bbox=dict(boxstyle="round,pad=0.5", facecolor=plotting.PANEL,
+                      edgecolor=plotting.GRID, linewidth=1))
+
+
 def fig_object_sizes(fracs: np.ndarray, figures_dir) -> None:
     """Histogram of bbox area as a fraction of image area (log scale)."""
-    fig, ax = plt.subplots(figsize=(7, 4.2))
+    fig, ax = plt.subplots(figsize=(7.6, 4.6))
     pct = fracs * 100
-    bins = np.logspace(np.log10(pct.min()), np.log10(pct.max()), 40)
-    ax.hist(pct, bins=bins, color=plotting.BLUE, edgecolor=plotting.SURFACE, linewidth=0.4)
+    bins = np.logspace(np.log10(pct.min()), np.log10(pct.max()), 42)
+    ax.hist(pct, bins=bins, color=plotting.BLUE, edgecolor="white", linewidth=0.5, alpha=0.95)
     ax.set_xscale("log")
+    ymax = ax.get_ylim()[1]
 
+    # Shade the "smaller than 1% of image" region — the whole challenge.
+    ax.axvspan(pct.min(), 1.0, color=plotting.BLUE_SOFT, alpha=0.18, zorder=0)
     median = np.median(pct)
-    ax.axvline(median, color=plotting.INK_SECONDARY, linewidth=1.2, linestyle="--")
-    ax.text(
-        median * 1.15,
-        ax.get_ylim()[1] * 0.92,
-        f"median {median:.3f}%",
-        color=plotting.INK_SECONDARY,
-        fontsize=9,
-    )
-    ax.axvline(1.0, color=plotting.INK_MUTED, linewidth=1.0, linestyle=":")
-    ax.text(1.1, ax.get_ylim()[1] * 0.78, "1% of image", color=plotting.INK_MUTED, fontsize=9)
+    ax.axvline(median, color=plotting.ORANGE, linewidth=1.8)
+    ax.text(median * 1.12, ymax * 0.95, f"median\n{median:.3f}%", color=plotting.ORANGE,
+            fontsize=9, fontweight="bold", va="top")
+    ax.axvline(1.0, color=plotting.INK_SECONDARY, linewidth=1.3, linestyle=(0, (4, 3)))
+    ax.text(1.15, ymax * 0.6, "1% of\nimage area", color=plotting.INK_SECONDARY, fontsize=9)
 
-    ax.set_xlabel("Bounding-box area as % of image area (log scale)")
+    frac_under = float((pct < 1.0).mean())
+    _callout(ax, 0.015, 0.97,
+             f"{frac_under:.1%} of objects are\nsmaller than 1% of the frame")
+
+    ax.set_xlabel("Bounding-box area as % of image area  (log scale)")
     ax.set_ylabel("Number of annotations")
-    ax.set_title("UAVVaste litter objects are extremely small relative to the frame")
+    plotting.titles(ax, "Litter objects are tiny relative to the frame",
+                    "UAVVaste bounding-box size distribution")
     plotting.save_figure(fig, "object_size_distribution", figures_dir)
     plt.close(fig)
 
 
 def fig_annotations_per_image(counts: np.ndarray, figures_dir) -> None:
     """Histogram of annotations per image."""
-    fig, ax = plt.subplots(figsize=(7, 4.2))
+    fig, ax = plt.subplots(figsize=(7.6, 4.6))
     bins = np.arange(0, counts.max() + 2) - 0.5
-    ax.hist(counts, bins=bins, color=plotting.BLUE, edgecolor=plotting.SURFACE, linewidth=0.4)
+    ax.hist(counts, bins=bins, color=plotting.BLUE, edgecolor="white", linewidth=0.6, alpha=0.95)
 
     mean, median = counts.mean(), np.median(counts)
-    ax.axvline(mean, color=plotting.INK_SECONDARY, linewidth=1.2, linestyle="--")
-    ax.text(
-        mean + 0.6,
-        ax.get_ylim()[1] * 0.92,
-        f"mean {mean:.1f} / median {median:.0f}",
-        color=plotting.INK_SECONDARY,
-        fontsize=9,
-    )
+    ax.axvline(mean, color=plotting.ORANGE, linewidth=1.8)
+    ax.text(mean + 0.8, ax.get_ylim()[1] * 0.9, f"mean {mean:.1f}", color=plotting.ORANGE,
+            fontsize=9.5, fontweight="bold")
+    _callout(ax, 0.5, 0.97,
+             f"median {median:.0f}  ·  max {int(counts.max())}\nevery image contains litter")
+
     ax.set_xlabel("Annotations per image")
     ax.set_ylabel("Number of images")
-    ax.set_title("Litter annotations per UAVVaste image")
+    ax.set_xlim(-0.5, min(counts.max() + 1, 30))
+    plotting.titles(ax, "Most images hold only a few litter items",
+                    "Litter annotations per UAVVaste image")
     plotting.save_figure(fig, "annotations_per_image", figures_dir)
     plt.close(fig)
 
@@ -86,37 +97,24 @@ def fig_tile_balance(stats: dict, figures_dir) -> None:
     neg = [stats[s]["neg"] for s in splits]
 
     x = np.arange(len(splits))
-    width = 0.38
-    fig, ax = plt.subplots(figsize=(7, 4.2))
-    b1 = ax.bar(x - width / 2, pos, width, label="litter", color=plotting.BLUE)
-    b2 = ax.bar(x + width / 2, neg, width, label="no litter", color=plotting.GREEN)
+    width = 0.36
+    fig, ax = plt.subplots(figsize=(7.6, 4.6))
+    b1 = ax.bar(x - width / 2, neg, width, label="no litter", color=plotting.GREEN)
+    b2 = ax.bar(x + width / 2, pos, width, label="litter", color=plotting.BLUE)
+    plotting.bar_labels(ax, b1, fmt="{:,.0f}", fontsize=8.5)
+    plotting.bar_labels(ax, b2, fmt="{:,.0f}", fontsize=8.5)
 
-    for bars in (b1, b2):
-        for rect in bars:
-            ax.text(
-                rect.get_x() + rect.get_width() / 2,
-                rect.get_height(),
-                f"{int(rect.get_height()):,}",
-                ha="center",
-                va="bottom",
-                fontsize=8,
-                color=plotting.INK_SECONDARY,
-            )
-    for i, s in enumerate(splits):
-        ax.text(
-            i,
-            -0.14,
-            f"{stats[s]['pos_frac']:.1%} positive",
-            transform=ax.get_xaxis_transform(),
-            ha="center",
-            fontsize=8,
-            color=plotting.INK_MUTED,
-        )
-
-    ax.set_xticks(x, [s.capitalize() for s in splits])
+    labels = []
+    for s in splits:
+        n = stats[s]["pos"] + stats[s]["neg"]
+        labels.append(f"{s.capitalize()}\n{stats[s]['pos_frac']:.1%} litter  ·  {n:,} tiles")
+    ax.set_xticks(x, labels)
     ax.set_ylabel("Number of tiles")
-    ax.set_title("Tile class balance per split (image-level splits)")
-    ax.legend()
+    ax.set_ylim(0, max(neg) * 1.16)
+    total_pos = stats.get("total", {}).get("pos_frac", stats[splits[0]]["pos_frac"])
+    plotting.titles(ax, "Tiles are strongly imbalanced toward 'no litter'",
+                    f"512 px tiles per split  ·  ~{total_pos:.0%} positive overall (image-level splits)")
+    ax.legend(loc="upper right", ncol=2)
     plotting.save_figure(fig, "tile_class_balance", figures_dir)
     plt.close(fig)
 

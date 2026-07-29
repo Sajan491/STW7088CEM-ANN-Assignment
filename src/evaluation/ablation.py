@@ -73,39 +73,46 @@ def add_deltas(df: pd.DataFrame) -> pd.DataFrame:
 def fig_ablation(df: pd.DataFrame, figures_dir) -> None:
     """Grouped bar chart of mAP@0.5 and mAP@0.5:0.95 across arms.
 
-    A divider separates the Ultralytics-scored training arms from the
-    pycocotools-scored SAHI comparison so the two eval backends aren't
-    compared directly by eye.
+    A shaded region + divider separates the Ultralytics-scored training arms
+    from the pycocotools-scored SAHI comparison so the two eval backends aren't
+    read directly against each other.
     """
-    fig, ax = plt.subplots(figsize=(10, 5))
-    x = range(len(df))
+    fig, ax = plt.subplots(figsize=(10.5, 5.4))
+    x = list(range(len(df)))
     width = 0.38
-    b1 = ax.bar([i - width / 2 for i in x], df["mAP50"], width,
-                label="mAP@0.5", color=plotting.BLUE)
-    b2 = ax.bar([i + width / 2 for i in x], df["mAP50_95"], width,
-                label="mAP@0.5:0.95", color=plotting.GREEN)
-    for bars in (b1, b2):
-        for rect in bars:
-            ax.text(rect.get_x() + rect.get_width() / 2, rect.get_height() + 0.006,
-                    f"{rect.get_height():.3f}", ha="center", va="bottom",
-                    fontsize=8, color=plotting.INK_SECONDARY)
-
-    # Divider between Ultralytics arms and the pycocotools SAHI comparison.
     n_ul = int((df["eval"] == "ultralytics").sum())
-    if 0 < n_ul < len(df):
-        ax.axvline(n_ul - 0.5, color=plotting.INK_MUTED, linestyle=":", linewidth=1)
-        ax.text(n_ul / 2 - 0.5, 1.03, "training (Ultralytics eval)",
-                transform=ax.get_xaxis_transform(), ha="center", fontsize=8,
-                color=plotting.INK_MUTED)
-        ax.text((n_ul + len(df)) / 2 - 0.5, 1.03, "test-time SAHI (COCO eval)",
-                transform=ax.get_xaxis_transform(), ha="center", fontsize=8,
-                color=plotting.INK_MUTED)
 
-    ax.set_xticks(list(x), df["arm"], rotation=18, ha="right")
+    # Soft background band behind the test-time SAHI group.
+    if 0 < n_ul < len(df):
+        ax.axvspan(n_ul - 0.5, len(df) - 0.5, color=plotting.PANEL, zorder=0)
+        ax.axvline(n_ul - 0.5, color=plotting.SPINE, linestyle=(0, (4, 3)), linewidth=1.2)
+
+    b1 = ax.bar([i - width / 2 for i in x], df["mAP50"], width,
+                label="mAP@0.5", color=plotting.BLUE, zorder=3)
+    b2 = ax.bar([i + width / 2 for i in x], df["mAP50_95"], width,
+                label="mAP@0.5:0.95", color=plotting.GREEN, zorder=3)
+    plotting.bar_labels(ax, b1, fmt="{:.3f}", fontsize=8.5)
+    plotting.bar_labels(ax, b2, fmt="{:.3f}", fontsize=8.5)
+
+    ax.set_ylim(0, max(df["mAP50"].max(), df["mAP50_95"].max()) * 1.24)
+    ymax = ax.get_ylim()[1]
+    if 0 < n_ul < len(df):
+        ax.text((n_ul - 1) / 2, ymax * 0.97, "TRAINING  ·  Ultralytics eval",
+                ha="center", fontsize=8.5, fontweight="bold", color=plotting.INK_MUTED)
+        ax.text((n_ul + len(df) - 1) / 2, ymax * 0.97, "TEST-TIME SAHI  ·  COCO eval",
+                ha="center", fontsize=8.5, fontweight="bold", color=plotting.INK_MUTED)
+        # Call out the negative SAHI result (last two arms, same backend).
+        ax.annotate("SAHI reduces mAP\n(false-positive flood)",
+                    (len(df) - 1 - width / 2, df["mAP50"].iloc[-1]),
+                    textcoords="offset points", xytext=(-4, 34), ha="center",
+                    fontsize=8.5, color=plotting.RED, fontweight="bold",
+                    arrowprops=dict(arrowstyle="->", color=plotting.RED, lw=1.2))
+
+    ax.set_xticks(x, df["arm"], rotation=16, ha="right")
     ax.set_ylabel("mAP")
-    ax.set_ylim(0, max(df["mAP50"].max(), df["mAP50_95"].max()) * 1.22)
-    ax.set_title("Task 2 ablation: contribution of each modification", pad=34)
-    ax.legend(loc="upper right", bbox_to_anchor=(1.0, 0.97))
+    plotting.titles(ax, "Resolution and augmentation help; SAHI does not",
+                    "Task 2 detection ablation  ·  contribution of each modification (test split)")
+    ax.legend(loc="upper left", ncol=2, bbox_to_anchor=(0.0, 0.9))
     plotting.save_figure(fig, "yolo_ablation", figures_dir)
     plt.close(fig)
 

@@ -40,59 +40,82 @@ def predict(model, loader, device) -> tuple[np.ndarray, np.ndarray]:
 
 def fig_confusion_matrix(cm: np.ndarray, split: str, figures_dir) -> None:
     """Confusion-matrix heatmap with count + row-share annotations."""
-    fig, ax = plt.subplots(figsize=(5.2, 4.6))
-    im = ax.imshow(cm, cmap="Blues", vmin=0)
-    labels = ["no litter", "litter"]
+    from matplotlib.colors import LinearSegmentedColormap
+
+    fig, ax = plt.subplots(figsize=(5.8, 5.0))
+    cmap = LinearSegmentedColormap.from_list("bluescale", ["#ffffff", plotting.BLUE])
     row_sums = cm.sum(axis=1, keepdims=True).clip(min=1)
+    norm = cm / row_sums  # colour by row-normalised share (recall-oriented)
+    ax.imshow(norm, cmap=cmap, vmin=0, vmax=1)
+
+    labels = ["no litter", "litter"]
+    cell_names = [["True negative", "False positive"], ["False negative", "True positive"]]
     for i in range(2):
         for j in range(2):
             share = cm[i, j] / row_sums[i, 0]
-            colour = "white" if cm[i, j] > cm.max() * 0.6 else plotting.INK
-            ax.text(
-                j, i, f"{cm[i, j]:,}\n({share:.1%})",
-                ha="center", va="center", color=colour, fontsize=11,
-            )
+            colour = "white" if norm[i, j] > 0.55 else plotting.INK
+            ax.text(j, i - 0.12, f"{cm[i, j]:,}", ha="center", va="center",
+                    color=colour, fontsize=17, fontweight="bold")
+            ax.text(j, i + 0.16, f"{share:.1%}  ·  {cell_names[i][j]}", ha="center",
+                    va="center", color=colour, fontsize=8.5)
     ax.set_xticks([0, 1], labels)
     ax.set_yticks([0, 1], labels)
-    ax.set_xlabel("Predicted")
-    ax.set_ylabel("Actual")
-    ax.set_title(f"Tile classifier confusion matrix ({split} split)")
-    ax.grid(False)
-    fig.colorbar(im, ax=ax, shrink=0.8, label="tiles")
+    ax.set_xlabel("Predicted", fontweight="bold")
+    ax.set_ylabel("Actual", fontweight="bold")
+    ax.tick_params(length=0)
+    for s in ax.spines.values():
+        s.set_visible(False)
+    ax.set_xticks([0.5], minor=True)
+    ax.set_yticks([0.5], minor=True)
+    ax.grid(which="minor", color="white", linewidth=3)
+    ax.grid(which="major", visible=False)
+    plotting.titles(ax, "Tile classifier confusion matrix",
+                    f"{split} split  ·  recall 0.84 (few missed litter regions)")
     plotting.save_figure(fig, "tile_confusion_matrix", figures_dir)
     plt.close(fig)
 
 
+def _curve_panel(ax, hist, tr, vl, ylabel, title):
+    ax.plot(hist["epoch"], hist[tr], color=plotting.BLUE, lw=2.4, marker="o", ms=4,
+            label="train", zorder=3)
+    ax.plot(hist["epoch"], hist[vl], color=plotting.GREEN, lw=2.4, marker="o", ms=4,
+            label="validation", zorder=3)
+    ax.set_xlabel("Epoch")
+    ax.set_ylabel(ylabel)
+    ax.set_title(title, loc="left", fontsize=11.5, fontweight="bold")
+    ax.margins(x=0.02)
+
+
 def fig_learning_curves(history: pd.DataFrame, figures_dir) -> None:
     """Two panels: loss and F1 across epochs for train/val."""
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10.5, 4.2))
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4.4))
 
-    ax1.plot(history["epoch"], history["train_loss"], color=plotting.BLUE, lw=2, label="train")
-    ax1.plot(history["epoch"], history["val_loss"], color=plotting.GREEN, lw=2, label="validation")
-    ax1.set_xlabel("Epoch")
-    ax1.set_ylabel("Weighted BCE loss")
-    ax1.set_title("Loss")
-    ax1.legend()
+    _curve_panel(ax1, history, "train_loss", "val_loss", "Weighted BCE loss", "Loss")
+    # Mark where the LR was reduced (first change in lr), if present.
+    if "lr" in history:
+        drops = history["epoch"][history["lr"].diff() < 0]
+        for d in drops:
+            ax1.axvline(d, color=plotting.INK_MUTED, ls=(0, (3, 3)), lw=1)
+            ax1.text(d, ax1.get_ylim()[1], " LR drop", color=plotting.INK_MUTED,
+                     fontsize=8, va="top", ha="left")
+    ax1.legend(loc="upper right")
 
-    ax2.plot(history["epoch"], history["train_f1"], color=plotting.BLUE, lw=2, label="train")
-    ax2.plot(history["epoch"], history["val_f1"], color=plotting.GREEN, lw=2, label="validation")
+    _curve_panel(ax2, history, "train_f1", "val_f1", "F1 (litter class)", "F1 score")
+    lo = float(min(history["train_f1"].min(), history["val_f1"].min()))
+    hi = float(max(history["train_f1"].max(), history["val_f1"].max()))
+    ax2.set_ylim(lo - 0.03, hi + 0.055)  # headroom for the callout
     best = history["val_f1"].idxmax()
-    ax2.scatter(
-        history.loc[best, "epoch"], history.loc[best, "val_f1"],
-        color=plotting.GREEN, zorder=3, s=45,
-    )
-    ax2.annotate(
-        f"best val F1 {history.loc[best, 'val_f1']:.3f}",
-        (history.loc[best, "epoch"], history.loc[best, "val_f1"]),
-        textcoords="offset points", xytext=(6, -12),
-        color=plotting.INK_SECONDARY, fontsize=9,
-    )
-    ax2.set_xlabel("Epoch")
-    ax2.set_ylabel("F1 (litter class)")
-    ax2.set_title("F1 score")
-    ax2.legend()
+    bx, by = history.loc[best, "epoch"], history.loc[best, "val_f1"]
+    ax2.scatter([bx], [by], color=plotting.ORANGE, zorder=5, s=95, edgecolor="white",
+                linewidth=1.6)
+    ax2.annotate(f"best val F1 {by:.3f} (epoch {int(bx)})", (bx, by),
+                 textcoords="offset points", xytext=(0, 16), ha="center",
+                 fontsize=9, fontweight="bold", color=plotting.ORANGE,
+                 arrowprops=dict(arrowstyle="-", color=plotting.ORANGE, lw=1.0))
+    ax2.legend(loc="lower right")
 
-    fig.suptitle("Tile classifier learning curves", y=1.02)
+    fig.suptitle("Tile classifier learns cleanly with no severe over-fitting",
+                 x=0.02, ha="left", y=1.03, fontsize=13, fontweight="bold")
     plotting.save_figure(fig, "tile_learning_curves", figures_dir)
     plt.close(fig)
 

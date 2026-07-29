@@ -232,3 +232,5 @@ checkpoints/
 *.zip
 *.tar.gz
 
+overleaf/
+docs/

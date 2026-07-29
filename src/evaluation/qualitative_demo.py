@@ -56,11 +56,20 @@ def read_raw(path: Path) -> np.ndarray:
     return cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB)
 
 
-def draw_boxes(ax, image, boxes, color, title):
+def draw_boxes(ax, image, boxes, color, title, subtitle):
+    """Show the image with boxes; each box has a subtle white halo for contrast."""
+    import matplotlib.patheffects as pe
+
     ax.imshow(image)
+    halo = [pe.Stroke(linewidth=3.2, foreground="white", alpha=0.7), pe.Normal()]
     for (x, y, w, h) in boxes:
-        ax.add_patch(plt.Rectangle((x, y), w, h, fill=False, edgecolor=color, linewidth=1.5))
-    ax.set_title(title)
+        r = plt.Rectangle((x, y), w, h, fill=False, edgecolor=color, linewidth=1.8)
+        r.set_path_effects(halo)
+        ax.add_patch(r)
+    ax.set_title(title, loc="left", fontsize=12.5, fontweight="bold", color=color, pad=22)
+    ax.annotate(subtitle, xy=(0, 1), xycoords="axes fraction", xytext=(0, 5),
+                textcoords="offset points", ha="left", va="bottom", fontsize=9.5,
+                color=plotting.INK_MUTED)
     ax.axis("off")
 
 
@@ -87,17 +96,27 @@ def demo_image(name, ds, images_dir, tile_model, yolo_model, cfg_tile, cfg_yolo,
         device=device,
     )
 
-    fig, axes = plt.subplots(1, 3, figsize=(16, 5.5))
+    aspect = image.shape[0] / image.shape[1]  # keep the figure close to the image shape
+    fig, axes = plt.subplots(1, 3, figsize=(16.5, 3.2 + 4.2 * aspect))
     draw_boxes(axes[0], image, gt_boxes, plotting.GREEN,
-               f"Ground truth ({len(gt_boxes)} litter)")
+               "Ground truth", f"{len(gt_boxes)} labelled litter items")
     draw_boxes(axes[1], image, det_boxes, plotting.BLUE,
-               f"YOLO detections ({len(det_boxes)} @ conf {conf})")
+               "YOLO detections", f"{len(det_boxes)} found at confidence {conf}")
     axes[2].imshow(image)
-    hm = axes[2].imshow(heat, cmap="jet", alpha=0.45, vmin=0, vmax=1)
-    axes[2].set_title("Tile-classifier litter heatmap")
+    hm = axes[2].imshow(heat, cmap="turbo", alpha=0.5, vmin=0, vmax=1)
+    axes[2].set_title("Tile-classifier heatmap", loc="left", fontsize=12.5,
+                      fontweight="bold", color=plotting.ORANGE, pad=22)
+    axes[2].annotate("region-level litter probability", xy=(0, 1), xycoords="axes fraction",
+                     xytext=(0, 5), textcoords="offset points", ha="left", va="bottom",
+                     fontsize=9.5, color=plotting.INK_MUTED)
     axes[2].axis("off")
-    fig.colorbar(hm, ax=axes[2], fraction=0.046, pad=0.04, label="litter prob.")
-    fig.suptitle(f"Unseen aerial image: {name}", y=1.02, fontsize=13)
+    cbar = fig.colorbar(hm, ax=axes[2], fraction=0.046, pad=0.02)
+    cbar.set_label("litter probability", fontsize=9)
+    cbar.outline.set_visible(False)
+    fig.suptitle(f"Two-stage pipeline on an unseen image  —  the detector localises items, "
+                 f"the classifier flags regions", y=0.99, fontsize=13,
+                 fontweight="bold", color=plotting.INK)
+    fig.tight_layout(rect=(0, 0, 1, 0.93))
 
     out = plotting.save_figure(fig, f"demo_{Path(name).stem}", out_dir)
     plt.close(fig)
