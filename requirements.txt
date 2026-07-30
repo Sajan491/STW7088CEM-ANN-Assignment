@@ -25,3 +25,6 @@ seaborn>=0.13
 # Notebooks & tests
 jupyter>=1.0
 pytest>=8.0
+
+# Demo dashboard
+streamlit>=1.33

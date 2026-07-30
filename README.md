@@ -190,6 +190,34 @@ python -m src.evaluation.qualitative_demo --images BATCH_d06_img_1440.jpg   # sp
 
 Notebook version: [notebooks/05_results_analysis.ipynb](notebooks/05_results_analysis.ipynb).
 
+## Interactive demo app
+
+A Streamlit dashboard ([app/streamlit_app.py](app/streamlit_app.py)) has two
+pages (sidebar navigation):
+
+- **Live demo** — runs both trained models on a single image, live and on CPU:
+  pick a held-out test image (or upload your own aerial photo) and see three
+  panels side by side — original / ground truth, YOLO detections (confidence
+  slider + per-box scores), and the tile-classifier litter heatmap — plus
+  detection counts and per-model latency.
+- **Results & visualisations** — a control page collecting every headline figure
+  and table from the report (EDA, tile-CNN curves/confusion matrix, the YOLO
+  ablation with per-config PR/F1 curves, and the qualitative demos), organised in
+  tabs, read straight from `results/`.
+
+It loads the committed checkpoints and reuses the exact inference code from
+`src`, so what it shows matches the report figures.
+
+```bash
+pip install -r requirements.txt        # now includes streamlit
+streamlit run app/streamlit_app.py
+```
+
+Uses `checkpoints/tile_cnn_best.pt` and `checkpoints/yolo_optimized.pt`
+(and `yolo_baseline.pt` for the baseline/optimised toggle). Test-image mode also
+needs the UAVVaste images under `data/images/` (see the Dataset section); the
+upload mode works with any aerial image.
+
 ## Reproducibility
 
 All scripts are config-driven (see `configs/`), set global seeds, and support a
