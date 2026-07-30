@@ -8,8 +8,15 @@ records the validation metrics.
 Usage:
     python -m src.training.train_yolo
     python -m src.training.train_yolo --config configs/yolo_baseline.yaml
-    python -m src.training.train_yolo --epochs 3 --limit-note smoke   # quick run
+    python -m src.training.train_yolo --epochs 3 --device cpu   # quick CPU run
 """
+
+import os
+
+# CPU stability on Windows/conda: PyTorch and OpenCV can each load their own
+# OpenMP runtime, which crashes YOLO training with a hard segfault. Allowing the
+# duplicate load fixes it. Must be set before torch/MKL import; harmless on GPU.
+os.environ.setdefault("KMP_DUPLICATE_LIB_OK", "TRUE")
 
 import argparse
 import shutil

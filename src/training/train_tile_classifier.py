@@ -10,6 +10,12 @@ Usage:
     python -m src.training.train_tile_classifier --limit 400 --epochs 2   # smoke test
 """
 
+import os
+
+# CPU stability on Windows/conda: allow duplicate OpenMP runtimes (PyTorch +
+# OpenCV) so training does not segfault. Must precede the torch import.
+os.environ.setdefault("KMP_DUPLICATE_LIB_OK", "TRUE")
+
 import argparse
 import time
 from pathlib import Path
