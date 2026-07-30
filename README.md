@@ -101,9 +101,6 @@ python -m src.data.tiles --limit 10              # smoke test on 10 images
 python -m pytest tests/ -v
 ```
 
-Notebook version: [notebooks/01_eda.ipynb](notebooks/01_eda.ipynb) runs the whole
-phase top-to-bottom and displays the generated figures and tables.
-
 ### Phase 2 — Tile classifier (Task 1)
 
 A custom CNN (stacked conv–pool blocks + dense head, defined in
@@ -121,9 +118,6 @@ python -m src.training.train_tile_classifier --limit 400 --epochs 2   # smoke te
 # -> metrics table, confusion matrix + learning-curve figures
 python -m src.evaluation.evaluate_tile_classifier
 ```
-
-Notebook version: [notebooks/02_tile_classifier.ipynb](notebooks/02_tile_classifier.ipynb)
-(tile generation, sample-tile grid, training, evaluation, results).
 
 ### Phase 3 — YOLO detection baseline (Task 2)
 
@@ -145,8 +139,6 @@ python -m src.training.train_yolo
 # 3. Evaluate on the held-out test split -> results/tables/yolo_baseline_metrics.csv
 python -m src.evaluation.evaluate_yolo
 ```
-
-Notebook version: [notebooks/03_yolo_baseline.ipynb](notebooks/03_yolo_baseline.ipynb).
 
 ### Phase 4 — YOLO optimisation & ablation (Task 2)
 
@@ -171,8 +163,6 @@ python -m src.evaluation.sahi_eval    --config configs/yolo_optimized.yaml --no-
 python -m src.evaluation.ablation
 ```
 
-Notebook version: [notebooks/04_yolo_optimized.ipynb](notebooks/04_yolo_optimized.ipynb).
-
 ### Phase 5 — Evaluation & cross-task demonstration
 
 Consolidates both tasks' results and produces a qualitative demonstration on
@@ -187,8 +177,6 @@ python -m src.evaluation.consolidate
 python -m src.evaluation.qualitative_demo --num-images 4
 python -m src.evaluation.qualitative_demo --images BATCH_d06_img_1440.jpg   # specific image
 ```
-
-Notebook version: [notebooks/05_results_analysis.ipynb](notebooks/05_results_analysis.ipynb).
 
 ## Interactive demo app
 
